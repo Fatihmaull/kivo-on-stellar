@@ -117,6 +117,8 @@ Open [http://localhost:3000](http://localhost:3000) on your browser.
 ### Automated Test Suite ($\ge 3$ Unit & Contract Tests Passing)
 Running `cargo test` in the workspace executes our comprehensive suite verifying account abstraction behavior:
 
+![Cargo Test Output](./assets/cargo_test_output.png)
+
 ```bash
 $ cargo test --workspace
 running 14 tests
@@ -152,20 +154,16 @@ The application handles and displays graceful UI states for:
 ## 📸 Screenshots & UI Proofs
 
 ### 1. Wallet Connected & Multi-Wallet Modal (Level 1 & 2)
-*Kivo Landing Page & Connection Options:*
-![Kivo Landing Page UI](https://raw.githubusercontent.com/stellar/stellar-journey/main/assets/mock-connected.png) *(Placeholder - Replace with actual mockup or live screenshot)*
+*Kivo Dashboard & Connection Options:*
+![Kivo Desktop UI](./assets/kivo_desktop_ui.png)
 
-### 2. Successful Testnet Transaction & Contract Invocation (Level 1 & 2)
-*Simulating Biometric Passkey Signing & Transaction Broadcasting on Testnet:*
-![Transaction Confirmation](https://raw.githubusercontent.com/stellar/stellar-journey/main/assets/mock-transaction.png) *(Placeholder - Replace with actual mockup or live screenshot)*
-
-### 3. Mobile Responsive UI (Level 3)
+### 2. Mobile Responsive UI (Level 3)
 *Kivo Wallet Dashboard optimized for mobile screens:*
-![Mobile Dashboard View](https://raw.githubusercontent.com/stellar/stellar-journey/main/assets/mock-mobile.png) *(Placeholder - Replace with actual mockup or live screenshot)*
+![Mobile Dashboard View](./assets/kivo_mobile_ui.png)
 
-### 4. CI/CD Pipeline & Automated Workflows (Level 3)
-*GitHub Actions verified pipeline executing all workspace tests:*
-![CI/CD Pipeline](https://raw.githubusercontent.com/stellar/stellar-journey/main/assets/mock-ci.png) *(Placeholder - Replace with actual mockup or live screenshot)*
+### 3. Automated Contract Testing (Level 3)
+*All 14 Cargo Unit & Integration Tests Passing:*
+![Cargo Test Output](./assets/cargo_test_output.png)
 
 ---
 
