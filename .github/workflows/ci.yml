@@ -1,0 +1,64 @@
+name: Kivo CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  rust-contracts:
+    name: Build & Test Soroban Contracts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Rust Cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            .
+
+      - name: Check Workspace Compile
+        run: cargo check --workspace
+
+      - name: Run Contract Tests
+        run: cargo test --workspace
+
+      - name: Lint with Cargo Clippy
+        run: cargo clippy --workspace -- -D warnings
+
+  nextjs-frontend:
+    name: Build & Lint Next.js App
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install Dependencies
+        run: |
+          cd web
+          npm ci
+
+      - name: Lint Frontend
+        run: |
+          cd web
+          npm run lint
+
+      - name: Build Next.js Application
+        run: |
+          cd web
+          npm run build
