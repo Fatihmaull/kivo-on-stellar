@@ -165,6 +165,10 @@ The application handles and displays graceful UI states for:
 *All 14 Cargo Unit & Integration Tests Passing:*
 ![Cargo Test Output](./assets/cargo_test_output.png)
 
+### 4. Live UI Simulation Testing (Vercel)
+*Verification of biometric error handling and multi-wallet interactions on Vercel:*
+![Live UI Simulation](./assets/kivo_ui_simulation.webp)
+
 ---
 
 ## 🔄 CI/CD Pipeline Configuration
