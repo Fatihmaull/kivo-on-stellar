@@ -12,3 +12,12 @@ Cargo.lock
 # OS
 .DS_Store
 Thumbs.db
+
+# Build checks
+.build_check/
+target/
+
+# Frontend
+web/node_modules/
+web/.next/
+web/out/

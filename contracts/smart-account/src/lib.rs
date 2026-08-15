@@ -210,22 +210,33 @@ impl SmartAccountContract {
         session::revoke_session(&env, &session_id)
     }
 
+    /// Register the social RecoveryModule contract address.
+    /// Can only be set by the contract itself (requires owner auth).
+    pub fn set_recovery_module(
+        env: Env,
+        recovery_module: Address,
+    ) -> Result<(), WalletError> {
+        env.current_contract_address().require_auth();
+
+        Storage::set_recovery_module(&env, &recovery_module);
+        Ok(())
+    }
+
     // ═══════════════════════════════════════════════════════════════════
     // CREDENTIAL ROTATION (called by RecoveryModule after timelock)
     // ═══════════════════════════════════════════════════════════════════
 
     /// Rotate the owner's credentials. This is the final step of social recovery.
     ///
-    /// **Security:** This function can only be called by the contract itself.
-    /// The RecoveryModule triggers this via a cross-contract call that requires
-    /// guardian-threshold authorization.
+    /// **Security:** This function can only be called by the registered RecoveryModule contract.
     pub fn rotate_credentials(
         env: Env,
         new_credential_id: BytesN<32>,
         new_public_key: BytesN<65>,
     ) -> Result<(), WalletError> {
-        // Only this contract can rotate its own credentials
-        env.current_contract_address().require_auth();
+        // Load the registered recovery module and verify its authorization
+        let recovery_module = Storage::get_recovery_module(&env)?;
+        recovery_module.require_auth();
 
         signers::rotate_owner(&env, new_credential_id, new_public_key)
     }

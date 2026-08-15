@@ -10,6 +10,8 @@ pub enum DataKey {
     Config,
     /// Initialization guard
     Initialized,
+    /// Address of the registered RecoveryModule contract
+    RecoveryModule,
 
     // ═══ Persistent Storage (per-key, archivable, restorable) ═══
     /// Maps credential_id → SignerEntry
@@ -42,6 +44,12 @@ pub enum DataKey {
 pub enum RecoveryDataKey {
     /// The SmartAccount this module is bound to
     SmartAccount,
+    /// Maps proposal_id -> RecoveryProposal (Persistent)
+    Proposal(u32),
+    /// Counter for next proposal_id (Persistent)
+    NextProposalId,
+    /// Timelock expiration: proposal_id -> ledger_sequence (Temporary)
+    Timelock(u32),
 }
 
 /// Storage key enum for the PolicyEngine contract.

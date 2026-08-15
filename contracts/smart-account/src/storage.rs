@@ -54,6 +54,19 @@ impl Storage {
         env.storage().instance().set(&DataKey::Config, config);
     }
 
+    pub fn get_recovery_module(env: &Env) -> Result<Address, WalletError> {
+        env.storage()
+            .instance()
+            .get(&DataKey::RecoveryModule)
+            .ok_or(WalletError::NotInitialized)
+    }
+
+    pub fn set_recovery_module(env: &Env, address: &Address) {
+        env.storage()
+            .instance()
+            .set(&DataKey::RecoveryModule, address);
+    }
+
     /// Extend Instance TTL — called during every __check_auth for piggyback refresh.
     pub fn extend_instance_ttl(env: &Env) {
         env.storage()
