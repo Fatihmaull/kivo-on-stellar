@@ -17,9 +17,11 @@
 ## 🔗 Quick Links & Verification Artifacts
 - **🌐 Live Demo (Vercel):** [https://kivo-wallet.vercel.app](https://kivo-wallet.vercel.app) *(Simulated Interactive Wallet Dashboard)*
 - **🎥 Demo Video (1–2 mins):** [Link to Demo Video / Loom / YouTube]
-- **📜 Deployed Smart Account Contract Address (Testnet):** `CAGSU6VX4K3UYZMVVUVSC4WVYPXHTJX5BMSTNEA4ZDVTDHZTBXGACSFK`
-- **🔍 Verifiable Contract Deployment Tx Hash:** `34b758e4d5c5dbbf45c4910f09f9878501eb07f29b2270cb7729007465b5af92` ([View on Stellar Expert](https://stellar.expert/explorer/testnet/tx/34b758e4d5c5dbbf45c4910f09f9878501eb07f29b2270cb7729007465b5af92))
-- **📦 Testnet Faucet / Deployer Account:** [View Deployed Contract Lab](https://lab.stellar.org/r/testnet/contract/CAGSU6VX4K3UYZMVVUVSC4WVYPXHTJX5BMSTNEA4ZDVTDHZTBXGACSFK)
+- **📜 Deployed Smart Account Contract Address (Testnet):** `CAGSU6VX4K3UYZMVVUVSC4WVYPXHTJX5BMSTNEA4ZDVTDHZTBXGACSFK` ([View Deployed Contract Lab](https://lab.stellar.org/r/testnet/contract/CAGSU6VX4K3UYZMVVUVSC4WVYPXHTJX5BMSTNEA4ZDVTDHZTBXGACSFK))
+- **🔄 Deployed Social Recovery Module Address (Testnet):** `CD6LUP5FM3B35PQJIWE7U42O4RRPKGZIZATD7SBLXX7LWKQJ4R5KJAMG` ([View on Stellar Expert](https://stellar.expert/explorer/testnet/tx/78b64a97371c2bd19caa13418a87e5edb11fead765b4898e49af05846f652432))
+- **📋 Deployed Policy Engine Address (Testnet):** `CBFC3JRAQDSGTL2ZPCUVVZOBSCRHYG625ERL3RGBPO2MATXI7KKZ4FFT` ([View on Stellar Expert](https://stellar.expert/explorer/testnet/tx/b36758945512b18f377810a3fff9a087ae94f618ee4ea10259cbac9976c9c3f8))
+- **⛽ Deployed Paymaster Contract Address (Testnet):** `CBXTTA3OCD6SRIUGAND4CA4EFAQ3IRWQ5ZJIWHG2NR4GXFSYDD5Z2BXM` ([View on Stellar Expert](https://stellar.expert/explorer/testnet/tx/de7ac57dc8adc2724340249d234c4b6ef46a6a5e328d0aebfac5d253b76aa5af))
+- **🔍 Verifiable Core Contract Deployment Tx Hash:** `34b758e4d5c5dbbf45c4910f09f9878501eb07f29b2270cb7729007465b5af92` ([View on Stellar Expert](https://stellar.expert/explorer/testnet/tx/34b758e4d5c5dbbf45c4910f09f9878501eb07f29b2270cb7729007465b5af92))
 
 ---
 
