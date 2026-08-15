@@ -17,9 +17,9 @@
 ## 🔗 Quick Links & Verification Artifacts
 - **🌐 Live Demo (Vercel):** [https://kivo-wallet.vercel.app](https://kivo-wallet.vercel.app) *(Simulated Interactive Wallet Dashboard)*
 - **🎥 Demo Video (1–2 mins):** [Link to Demo Video / Loom / YouTube]
-- **📜 Deployed Smart Account Contract Address (Testnet):** `CA3WNWV3W4PKE5B2Z47XYZ7XYZ7XYZ7XYZ7XYZ7XYZ7XYZ7XYZ7XYZ`
-- **🔍 Verifiable Contract Interaction Tx Hash:** `a7b68c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b` ([View on Stellar Expert](https://stellar.expert/explorer/testnet/tx/a7b68c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b))
-- **📦 Testnet Faucet / Account ID:** `GD3WNWV3W4PKE5B2Z47XYZ7XYZ7XYZ7XYZ7XYZ7XYZ7XYZ7XYZ7XYZ`
+- **📜 Deployed Smart Account Contract Address (Testnet):** `CAGSU6VX4K3UYZMVVUVSC4WVYPXHTJX5BMSTNEA4ZDVTDHZTBXGACSFK`
+- **🔍 Verifiable Contract Deployment Tx Hash:** `34b758e4d5c5dbbf45c4910f09f9878501eb07f29b2270cb7729007465b5af92` ([View on Stellar Expert](https://stellar.expert/explorer/testnet/tx/34b758e4d5c5dbbf45c4910f09f9878501eb07f29b2270cb7729007465b5af92))
+- **📦 Testnet Faucet / Deployer Account:** [View Deployed Contract Lab](https://lab.stellar.org/r/testnet/contract/CAGSU6VX4K3UYZMVVUVSC4WVYPXHTJX5BMSTNEA4ZDVTDHZTBXGACSFK)
 
 ---
 
