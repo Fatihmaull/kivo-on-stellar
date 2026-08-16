@@ -1,11 +1,11 @@
 /target
 /target_check
 *.wasm
-Cargo.lock
 
 # IDE
 .idea/
 .vscode/
+.claude/
 *.swp
 *.swo
 
@@ -17,7 +17,13 @@ Thumbs.db
 .build_check/
 target/
 
+# soroban-sdk auto-dumps a full ledger snapshot per test on every `cargo
+# test` run — pure regenerable debug output, not source.
+test_snapshots/
+
 # Frontend
 web/node_modules/
 web/.next/
 web/out/
+web/.env.local
+web/tsconfig.tsbuildinfo

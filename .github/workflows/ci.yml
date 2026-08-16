@@ -17,7 +17,7 @@ jobs:
       - name: Set up Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: wasm32-unknown-unknown
+          targets: wasm32v1-none
 
       - name: Rust Cache
         uses: swatinem/rust-cache@v2
@@ -33,6 +33,15 @@ jobs:
 
       - name: Lint with Cargo Clippy
         run: cargo clippy --workspace -- -D warnings
+
+      - name: Build Deployable WASM (all 4 contracts)
+        run: cargo build --workspace --release --target wasm32v1-none
+
+      - name: Verify WASM Artifacts Exist
+        run: |
+          for f in novus_smart_account novus_recovery_module novus_policy_engine novus_paymaster; do
+            test -f "target/wasm32v1-none/release/${f}.wasm" || { echo "missing $f.wasm"; exit 1; }
+          done
 
   nextjs-frontend:
     name: Build & Lint Next.js App
