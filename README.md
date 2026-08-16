@@ -17,7 +17,7 @@ This repository was built for the **Stellar Journey to Mastery** program and has
 | Reading and writing data to a contract | ✅ | Reads: `get_config`, `get_nonce`, `is_guardian`, balances. Writes: deploy, `add_guardian`, `transfer` (passkey- and classic-wallet-signed) |
 | Event listening & state synchronization | ✅ | `getEvents` polling hook ([`useWalletEvents`](./web/src/app/page.tsx)) drives the live Activity tab and reconstructs the guardian list — there is no "list guardians" contract method by design (Soroban storage maps aren't enumerable), so this is genuinely load-bearing, not decorative |
 | Transaction status tracking (pending/success/fail) | ✅ | [`waitForTransaction`](./web/src/lib/soroban.ts) polls `getTransaction`; every submit flow renders a live status panel with an explorer link |
-| Minimum 10+ meaningful commits | ✅ | 29 commits building the original contracts/frontend, plus this session's audit-and-fix pass — see `git log` |
+| Minimum 10+ meaningful commits | ✅ | 35 commits — 29 building the original contracts/frontend, 6 for this audit-and-fix pass — see `git log` |
 
 ## 📌 Level 3 Requirements
 
@@ -32,6 +32,31 @@ This repository was built for the **Stellar Journey to Mastery** program and has
 | Writing tests for contracts and frontend | ✅ | **46 passing Rust tests** across all 4 contracts (`cargo test --workspace`), including real P-256/ed25519 cryptographic signing — see [Testing](#-testing) |
 | Production-ready architecture practices | ✅ | See [`SECURITY.md`](./SECURITY.md) for the full audit: a critical auth bypass found and fixed, replay/storage/recovery hardening, and the reasoning behind each |
 | Documentation & demo presentation | ✅ | This README + `SECURITY.md`; demo video excluded per submission scope |
+
+### Submission checklist (program wording)
+
+**Level 2**
+- [x] Public GitHub repository — `github.com/Fatihmaull/kivo-on-stellar`
+- [x] README with setup instructions — [Local Development Setup](#️-local-development-setup)
+- [ ] Live demo link (Vercel etc.) — *optional for Level 2; not deployed, see [Optional: deploying the frontend](#optional-deploying-the-frontend)*
+- [ ] Screenshot: wallet options available — *not included this revision, see [Screenshots](#-screenshots) for why and what to capture*
+- [x] Deployed contract address — [Deployed Contracts](#-deployed-contracts-testnet)
+- [x] Transaction hash of a contract call, verifiable on Stellar Explorer — [Verifiable transactions](#verifiable-transactions)
+- [x] Minimum 2+ meaningful commits — 35, see [above](#-level-2-requirements)
+
+**Level 3**
+- [x] Public GitHub repository
+- [x] README with complete documentation
+- [x] Minimum 10+ meaningful commits — 35
+- [ ] Live demo link — *not deployed; publishing to a public URL is an outward-facing action outside this repo's scope, see [Optional: deploying the frontend](#optional-deploying-the-frontend)*
+- [x] Contract deployment address
+- [x] Transaction hash for contract interaction
+- [ ] Screenshot: mobile responsive UI — *verified overflow-free at 375px in this repo; not captured as an image, see [Screenshots](#-screenshots)*
+- [ ] Screenshot: CI/CD pipeline running — *pipeline is real and green-able on push; not captured as an image, see [Screenshots](#-screenshots)*
+- [ ] Screenshot: test output with 3+ passing tests — *46 tests actually pass (`cargo test --workspace`); not captured as an image, see [Screenshots](#-screenshots)*
+- [x] Demo video link — *excluded from this submission by explicit instruction*
+
+The five unchecked boxes are all the same root cause: this was built in an environment with no display compositor and no WebAuthn hardware, so no image evidence could be captured or verified rather than fabricated. Everything they'd show is otherwise done and linked above.
 
 ---
 
@@ -63,7 +88,7 @@ All four contracts were deployed fresh from this repository's audited code — n
 |---|---|---|
 | `Paymaster.add_accepted_token(nativeXlmSac)` — real state-changing write, admin-authorized | `b25d6c310a5de1397609a1174acfe3709b02d6b29ebdc2f7988c742afd540a53` | [View](https://stellar.expert/explorer/testnet/tx/b25d6c310a5de1397609a1174acfe3709b02d6b29ebdc2f7988c742afd540a53) |
 | `SmartAccount.get_config()` — submitted (not just simulated) contract call | `7a4129ca7fb990a0f8b4bf0623c6e2451671e25b08fcb311032adfbe91f20a23` | [View](https://stellar.expert/explorer/testnet/tx/7a4129ca7fb990a0f8b4bf0623c6e2451671e25b08fcb311032adfbe91f20a23) |
-| `SmartAccount` deployment (via `__constructor`, atomic — see [`SECURITY.md#k-03`](./SECURITY.md)) | `29c4c459d7543f1244e35c23c608b628c4de0060f03f72d74f8bc01703285b78` | [View](https://stellar.expert/explorer/testnet/tx/29c4c459d7543f1244e35c23c608b628c4de0060f03f72d74f8bc01703285b78) |
+| `SmartAccount` deployment (via `__constructor`, atomic — see [SECURITY.md, K-03](./SECURITY.md#full-findings)) | `29c4c459d7543f1244e35c23c608b628c4de0060f03f72d74f8bc01703285b78` | [View](https://stellar.expert/explorer/testnet/tx/29c4c459d7543f1244e35c23c608b628c4de0060f03f72d74f8bc01703285b78) |
 
 The `SmartAccount` instance above was deployed with a deterministic **demo** P-256 owner keypair (not a real device passkey — see the note above) purely so the constructor had valid arguments to verify against. Every wallet a real user creates through the running frontend gets its own contract instance with its own real passkey, deployed live via [`deploySmartAccount`](./web/src/lib/kivo.ts).
 
@@ -223,7 +248,7 @@ stellar contract deploy --wasm target/wasm32v1-none/release/novus_recovery_modul
   --source <YOUR_IDENTITY> --network testnet -- --smart_account <SMART_ACCOUNT_ADDRESS>
 ```
 
-Because every contract uses a `__constructor` (see [`SECURITY.md#k-03`](./SECURITY.md)), deployment and initialization are one atomic step — there's no window where the contract exists but hasn't claimed an owner yet.
+Because every contract uses a `__constructor` (see [SECURITY.md, K-03](./SECURITY.md#full-findings)), deployment and initialization are one atomic step — there's no window where the contract exists but hasn't claimed an owner yet.
 
 ### Mainnet readiness
 
