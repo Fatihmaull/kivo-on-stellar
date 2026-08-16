@@ -1,8 +1,8 @@
-/// Nonce management for replay protection.
-///
-/// Uses a dual-layer approach:
-/// 1. **Sequential nonce** (Persistent) — monotonically increasing counter
-/// 2. **Payload hash guard** (Temporary) — prevents exact payload replay within 24h
+//! Nonce management for replay protection.
+//!
+//! Uses a dual-layer approach:
+//! 1. **Sequential nonce** (Persistent) — monotonically increasing counter
+//! 2. **Payload hash guard** (Temporary) — prevents exact payload replay within 24h
 
 use soroban_sdk::{BytesN, Env};
 use soroban_sdk::crypto::Hash;

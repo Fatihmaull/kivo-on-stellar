@@ -4,7 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [lib]
-crate-type = ["cdylib"]
+# "rlib" (default, implied by leaving the plain lib target enabled) lets
+# other crates in this workspace depend on this contract's types directly —
+# recovery-module's tests deploy a real SmartAccountContract instead of a
+# stub. "cdylib" is what actually produces the deployable .wasm.
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 soroban-sdk = { workspace = true }
@@ -12,3 +16,15 @@ novus-types = { workspace = true }
 
 [dev-dependencies]
 soroban-sdk = { workspace = true, features = ["testutils"] }
+# Real P-256 signing so the WebAuthn auth-path tests exercise the actual
+# secp256r1_verify call the contract makes, not a stub.
+p256 = { version = "0.13", features = ["ecdsa"] }
+# Real ed25519 signing for session-key scope tests. Deterministic
+# from_bytes()/sign() only — no "rand_core" feature needed (and enabling
+# it pulls in a rand_core version that conflicts with soroban-env-host's
+# own test utilities).
+ed25519-dalek = { version = "2", default-features = false, features = ["std"] }
+# Real cross-contract execute_sponsored tests deploy an actual paymaster
+# and policy-engine instead of stubs.
+novus-paymaster = { path = "../paymaster" }
+novus-policy-engine = { path = "../policy-engine" }

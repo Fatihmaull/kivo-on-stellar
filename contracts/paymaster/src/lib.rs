@@ -1,33 +1,37 @@
 #![no_std]
 
-use soroban_sdk::{
-    contract, contractimpl, symbol_short, Address, Env, IntoVal, Symbol, Vec,
-};
+use soroban_sdk::{contract, contractimpl, symbol_short, Address, Env, IntoVal, Vec};
 
 use novus_types::{PaymasterDataKey, WalletError};
 
+/// ═══════════════════════════════════════════════════════════════════════
+/// Paymaster Contract
+/// ═══════════════════════════════════════════════════════════════════════
+///
+/// Owns the accepted-fee-token registry and margin configuration, and acts
+/// as the treasury address fee payments land in. It does **not** pull
+/// funds from a wallet itself — that would let a relayer name its own
+/// price with nothing capping it. Instead `SmartAccountContract::execute_sponsored`
+/// reads `is_accepted_token` from here, transfers the fee itself under the
+/// same signature that authorizes the sponsored action, and enforces the
+/// user-signed `max_fee` bound before doing so. This contract's job is
+/// configuration and custody, not pulling money.
 #[contract]
 pub struct PaymasterContract;
 
 #[contractimpl]
 impl PaymasterContract {
-    /// Initialize the paymaster with admin, relayer, and native XLM token references.
-    pub fn initialize(
-        env: Env,
-        admin: Address,
-        relayer: Address,
-        xlm_token: Address,
-    ) -> Result<(), WalletError> {
-        if env.storage().instance().has(&PaymasterDataKey::Admin) {
-            return Err(WalletError::AlreadyInitialized);
-        }
-
+    pub fn __constructor(env: Env, admin: Address, relayer: Address, xlm_token: Address) {
         env.storage().instance().set(&PaymasterDataKey::Admin, &admin);
-        env.storage().instance().set(&PaymasterDataKey::Relayer, &relayer);
-        env.storage().instance().set(&PaymasterDataKey::XlmToken, &xlm_token);
-        env.storage().instance().set(&PaymasterDataKey::FeeMarginBps, &500u32); // Default 5% fee margin
-
-        Ok(())
+        env.storage()
+            .instance()
+            .set(&PaymasterDataKey::Relayer, &relayer);
+        env.storage()
+            .instance()
+            .set(&PaymasterDataKey::XlmToken, &xlm_token);
+        env.storage()
+            .instance()
+            .set(&PaymasterDataKey::FeeMarginBps, &500u32); // Default 5% fee margin
     }
 
     /// Set the fee margin in basis points (e.g. 500 = 5% extra). Requires admin authorization.
@@ -35,7 +39,20 @@ impl PaymasterContract {
         let admin = Self::get_admin(env.clone())?;
         admin.require_auth();
 
-        env.storage().instance().set(&PaymasterDataKey::FeeMarginBps, &margin_bps);
+        env.storage()
+            .instance()
+            .set(&PaymasterDataKey::FeeMarginBps, &margin_bps);
+        Ok(())
+    }
+
+    /// Replace the relayer address. Requires admin authorization.
+    pub fn set_relayer(env: Env, relayer: Address) -> Result<(), WalletError> {
+        let admin = Self::get_admin(env.clone())?;
+        admin.require_auth();
+
+        env.storage()
+            .instance()
+            .set(&PaymasterDataKey::Relayer, &relayer);
         Ok(())
     }
 
@@ -47,7 +64,9 @@ impl PaymasterContract {
         let mut tokens = Self::get_accepted_tokens(env.clone());
         if !tokens.contains(&token) {
             tokens.push_back(token);
-            env.storage().instance().set(&PaymasterDataKey::AcceptedTokens, &tokens);
+            env.storage()
+                .instance()
+                .set(&PaymasterDataKey::AcceptedTokens, &tokens);
         }
 
         Ok(())
@@ -66,65 +85,23 @@ impl PaymasterContract {
             }
         }
 
-        env.storage().instance().set(&PaymasterDataKey::AcceptedTokens, &new_tokens);
+        env.storage()
+            .instance()
+            .set(&PaymasterDataKey::AcceptedTokens, &new_tokens);
         Ok(())
     }
 
-    /// Collect fee from the SmartAccount in alternative tokens (e.g. USDC).
-    /// Called by the Relayer/Paymaster service during auth wrap.
-    pub fn collect_fee(
-        env: Env,
-        smart_account: Address,
-        fee_token: Address,
-        amount: i128,
-    ) -> Result<(), WalletError> {
-        let relayer = Self::get_relayer(env.clone())?;
-        relayer.require_auth();
-
-        let accepted_tokens = Self::get_accepted_tokens(env.clone());
-        if !accepted_tokens.contains(&fee_token) {
-            return Err(WalletError::Unauthorized); // Token not accepted
-        }
-
-        // Call the SAC (Stellar Asset Contract) transfer to pull fee token to the paymaster address
-        env.invoke_contract::<()>(
-            &fee_token,
-            &symbol_short!("transfer"),
-            (
-                smart_account.clone(),
-                env.current_contract_address(),
-                amount,
-            )
-                .into_val(&env),
-        );
-
-        env.events().publish(
-            (Symbol::new(&env, "fee_collected"),),
-            (smart_account, fee_token, amount),
-        );
-
-        Ok(())
-    }
-
-    /// Reclaim collected fee tokens (e.g. convert to XLM or transfer to admin). Requires admin auth.
-    pub fn reclaim_fees(
-        env: Env,
-        token: Address,
-        to: Address,
-        amount: i128,
-    ) -> Result<(), WalletError> {
+    /// Sweep collected fee tokens out of the treasury (e.g. rebalance to
+    /// XLM off-chain, or forward to an operating account). Requires admin
+    /// authorization.
+    pub fn reclaim_fees(env: Env, token: Address, to: Address, amount: i128) -> Result<(), WalletError> {
         let admin = Self::get_admin(env.clone())?;
         admin.require_auth();
 
         env.invoke_contract::<()>(
             &token,
             &symbol_short!("transfer"),
-            (
-                env.current_contract_address(),
-                to,
-                amount,
-            )
-                .into_val(&env),
+            (env.current_contract_address(), to, amount).into_val(&env),
         );
 
         Ok(())
@@ -168,4 +145,11 @@ impl PaymasterContract {
             .get(&PaymasterDataKey::AcceptedTokens)
             .unwrap_or_else(|| Vec::new(&env))
     }
+
+    pub fn is_accepted_token(env: Env, token: Address) -> bool {
+        Self::get_accepted_tokens(env).contains(&token)
+    }
 }
+
+#[cfg(test)]
+mod test;

@@ -12,6 +12,12 @@ pub enum DataKey {
     Initialized,
     /// Address of the registered RecoveryModule contract
     RecoveryModule,
+    /// Address of the registered PolicyEngine contract (optional — if unset,
+    /// the built-in daily-limit check in `policy.rs` is used instead).
+    PolicyEngine,
+    /// Address of the registered Paymaster contract (optional — required
+    /// only for `execute_sponsored`).
+    Paymaster,
 
     // ═══ Persistent Storage (per-key, archivable, restorable) ═══
     /// Maps credential_id → SignerEntry
@@ -26,14 +32,10 @@ pub enum DataKey {
     RecoveryProposal(u32),
     /// Next proposal ID counter
     NextProposalId,
-    /// Cooldown-after-recovery end ledger
-    RecoveryCooldownUntil,
 
     // ═══ Temporary Storage (auto-expire, cheapest) ═══
     /// Session key config: session_id → SessionConfig
     SessionKey(BytesN<32>),
-    /// Recovery timelock: proposal_id → expiry ledger
-    RecoveryTimelock(u32),
     /// Replay guard: payload_hash → true (TTL ~24h)
     ReplayGuard(BytesN<32>),
 }
@@ -44,12 +46,11 @@ pub enum DataKey {
 pub enum RecoveryDataKey {
     /// The SmartAccount this module is bound to
     SmartAccount,
-    /// Maps proposal_id -> RecoveryProposal (Persistent)
+    /// Maps proposal_id -> RecoveryProposal (Persistent — the timelock
+    /// expiry now lives inside the proposal itself; see `RecoveryProposal`)
     Proposal(u32),
     /// Counter for next proposal_id (Persistent)
     NextProposalId,
-    /// Timelock expiration: proposal_id -> ledger_sequence (Temporary)
-    Timelock(u32),
 }
 
 /// Storage key enum for the PolicyEngine contract.
@@ -58,7 +59,12 @@ pub enum RecoveryDataKey {
 pub enum PolicyDataKey {
     /// Admin address
     Admin,
-    /// Global whitelist
+    /// Whether the global whitelist is actively enforced. While `false`,
+    /// `check_policy` only enforces per-token limit overrides — this lets a
+    /// wallet adopt the PolicyEngine before curating a whitelist without
+    /// locking itself out.
+    WhitelistEnforced,
+    /// Global whitelist membership
     WhitelistedContract(Address),
     /// Per-token daily limit override
     TokenDailyLimit(Address),
@@ -74,10 +80,10 @@ pub enum PaymasterDataKey {
     Relayer,
     /// Accepted fee tokens list
     AcceptedTokens,
-    /// Fee margin in basis points
+    /// Fee margin in basis points, applied on top of the relayer's quote by
+    /// callers when they compute what to charge (informational — the
+    /// contract itself does not apply it automatically).
     FeeMarginBps,
     /// Wrapped XLM SAC address
     XlmToken,
-    /// Fee receipt (temporary): receipt_hash → amount
-    FeeReceipt(BytesN<32>),
 }

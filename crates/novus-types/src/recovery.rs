@@ -15,6 +15,11 @@ pub enum ProposalStatus {
 }
 
 /// A social recovery proposal stored in Persistent storage.
+///
+/// The timelock expiry lives directly on this struct (Persistent) rather
+/// than in a separate Temporary entry — a security deadline gated on
+/// evictable state can be archived out from under a proposal, permanently
+/// stranding it at `TimelockStarted` with no way to ever execute.
 #[contracttype]
 #[derive(Clone, Debug)]
 pub struct RecoveryProposal {
@@ -28,6 +33,9 @@ pub struct RecoveryProposal {
     pub approvals: Vec<Address>,
     /// Ledger sequence when the proposal was created
     pub created_at_ledger: u32,
+    /// Ledger sequence at which the timelock expires and `execute_recovery`
+    /// becomes callable. `0` while the proposal is still `Pending`.
+    pub timelock_expires_at: u32,
     /// Current lifecycle status
     pub status: ProposalStatus,
 }

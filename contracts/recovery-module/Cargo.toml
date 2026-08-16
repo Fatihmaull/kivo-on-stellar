@@ -12,3 +12,7 @@ novus-types = { workspace = true }
 
 [dev-dependencies]
 soroban-sdk = { workspace = true, features = ["testutils"] }
+# Real cross-contract recovery-flow tests deploy an actual smart-account
+# instance rather than a stub, so this suite exercises the genuine
+# is_guardian/get_config/rotate_credentials calls both contracts make.
+novus-smart-account = { path = "../smart-account" }

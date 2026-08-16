@@ -2,7 +2,6 @@
 ///
 /// Provides typed read/write access to all three storage tiers
 /// (Instance, Persistent, Temporary) with proper TTL management.
-
 use soroban_sdk::{Address, BytesN, Env};
 
 use novus_types::{
@@ -10,9 +9,9 @@ use novus_types::{
 };
 
 /// TTL constants (in ledger count, ~5s per ledger)
-const DAY_IN_LEDGERS: u32 = 17_280;       // ~24 hours
-const WEEK_IN_LEDGERS: u32 = 120_960;     // ~7 days
-const MONTH_IN_LEDGERS: u32 = 518_400;    // ~30 days
+const DAY_IN_LEDGERS: u32 = 17_280; // ~24 hours
+const WEEK_IN_LEDGERS: u32 = 120_960; // ~7 days
+const MONTH_IN_LEDGERS: u32 = 518_400; // ~30 days
 
 /// Minimum TTL before we extend (threshold to trigger piggyback refresh)
 const PERSISTENT_TTL_THRESHOLD: u32 = WEEK_IN_LEDGERS;
@@ -67,6 +66,24 @@ impl Storage {
             .set(&DataKey::RecoveryModule, address);
     }
 
+    pub fn get_policy_engine(env: &Env) -> Option<Address> {
+        env.storage().instance().get(&DataKey::PolicyEngine)
+    }
+
+    pub fn set_policy_engine(env: &Env, address: &Address) {
+        env.storage()
+            .instance()
+            .set(&DataKey::PolicyEngine, address);
+    }
+
+    pub fn get_paymaster(env: &Env) -> Option<Address> {
+        env.storage().instance().get(&DataKey::Paymaster)
+    }
+
+    pub fn set_paymaster(env: &Env, address: &Address) {
+        env.storage().instance().set(&DataKey::Paymaster, address);
+    }
+
     /// Extend Instance TTL — called during every __check_auth for piggyback refresh.
     pub fn extend_instance_ttl(env: &Env) {
         env.storage()
@@ -75,7 +92,7 @@ impl Storage {
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // PERSISTENT STORAGE — Signers
+    // PERSISTENT STORAGE — Signers (Passkey, Ed25519, Guardian)
     // ═══════════════════════════════════════════════════════════════
 
     pub fn get_signer(env: &Env, credential_id: &BytesN<32>) -> Result<SignerEntry, WalletError> {
@@ -120,36 +137,39 @@ impl Storage {
     // ═══════════════════════════════════════════════════════════════
 
     pub fn get_nonce(env: &Env) -> u128 {
-        env.storage()
-            .persistent()
-            .get(&DataKey::Nonce)
-            .unwrap_or(0)
+        env.storage().persistent().get(&DataKey::Nonce).unwrap_or(0)
     }
 
     pub fn set_nonce(env: &Env, nonce: u128) {
         env.storage().persistent().set(&DataKey::Nonce, &nonce);
-        env.storage()
-            .persistent()
-            .extend_ttl(&DataKey::Nonce, PERSISTENT_TTL_THRESHOLD, PERSISTENT_TTL_EXTEND);
+        env.storage().persistent().extend_ttl(
+            &DataKey::Nonce,
+            PERSISTENT_TTL_THRESHOLD,
+            PERSISTENT_TTL_EXTEND,
+        );
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // PERSISTENT STORAGE — Daily Spending
+    // TEMPORARY STORAGE — Daily Spending
     // ═══════════════════════════════════════════════════════════════
+    //
+    // A day's spend record is inherently dead after ~24h, but a Persistent
+    // entry never self-cleans — it would sit there, permanently billed,
+    // forever. Temporary storage matches its real lifetime.
 
     pub fn get_daily_spend(env: &Env, token: &Address, day_index: u32) -> i128 {
         env.storage()
-            .persistent()
+            .temporary()
             .get(&DataKey::DailySpend(token.clone(), day_index))
             .unwrap_or(0)
     }
 
     pub fn set_daily_spend(env: &Env, token: &Address, day_index: u32, amount: i128) {
         let key = DataKey::DailySpend(token.clone(), day_index);
-        env.storage().persistent().set(&key, &amount);
+        env.storage().temporary().set(&key, &amount);
         // Daily spend entries only need to survive the day + buffer
         env.storage()
-            .persistent()
+            .temporary()
             .extend_ttl(&key, DAY_IN_LEDGERS, DAY_IN_LEDGERS * 2);
     }
 
@@ -157,7 +177,6 @@ impl Storage {
     // PERSISTENT STORAGE — Guardians
     // ═══════════════════════════════════════════════════════════════
 
-    #[allow(dead_code)]
     pub fn get_guardian(env: &Env, address: &Address) -> Result<GuardianInfo, WalletError> {
         env.storage()
             .persistent()
@@ -197,6 +216,12 @@ impl Storage {
             .temporary()
             .get(&DataKey::SessionKey(session_id.clone()))
             .ok_or(WalletError::SessionKeyExpired)
+    }
+
+    pub fn has_session(env: &Env, session_id: &BytesN<32>) -> bool {
+        env.storage()
+            .temporary()
+            .has(&DataKey::SessionKey(session_id.clone()))
     }
 
     pub fn set_session_config(

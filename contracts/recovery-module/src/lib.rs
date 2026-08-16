@@ -1,29 +1,34 @@
 #![no_std]
 
-use soroban_sdk::{
-    contract, contractimpl, Address, BytesN, Env, IntoVal, Symbol, Vec,
-};
+use soroban_sdk::{contract, contractimpl, Address, BytesN, Env, IntoVal, Symbol, Vec};
 
-use novus_types::{
-    ProposalStatus, RecoveryDataKey, RecoveryProposal, WalletConfig, WalletError,
-};
+use novus_types::{ProposalStatus, RecoveryDataKey, RecoveryProposal, WalletConfig, WalletError};
 
+/// ═══════════════════════════════════════════════════════════════════════
+/// RecoveryModule Contract
+/// ═══════════════════════════════════════════════════════════════════════
+///
+/// m-of-n guardian social recovery for a single bound SmartAccount. A
+/// proposal's timelock expiry is stored directly on the `RecoveryProposal`
+/// (Persistent) rather than in a separate Temporary entry — a Temporary
+/// deadline that gets archived would strand the proposal at
+/// `TimelockStarted` forever, since nothing could ever read the expiry
+/// again to let `execute_recovery` proceed.
 #[contract]
 pub struct RecoveryModuleContract;
 
 #[contractimpl]
 impl RecoveryModuleContract {
-    /// Initialize the recovery module with the target SmartAccount contract.
-    pub fn initialize(env: Env, smart_account: Address) -> Result<(), WalletError> {
-        if env.storage().instance().has(&RecoveryDataKey::SmartAccount) {
-            return Err(WalletError::AlreadyInitialized);
-        }
-
+    pub fn __constructor(env: Env, smart_account: Address) {
         env.storage()
             .instance()
             .set(&RecoveryDataKey::SmartAccount, &smart_account);
-
-        Ok(())
+        // This module is invoked rarely — often not at all for years — so
+        // its own Instance entry (the bound SmartAccount address) needs a
+        // deliberately generous TTL rather than the host's small default.
+        // Every state-changing call below re-bumps it, the same piggyback
+        // pattern the wallet itself uses.
+        env.storage().instance().extend_ttl(518_400, 518_400); // ~30 days
     }
 
     /// Return the bound SmartAccount address.
@@ -45,7 +50,6 @@ impl RecoveryModuleContract {
 
         let smart_account = Self::get_smart_account(env.clone())?;
 
-        // Verify the caller is a registered guardian on the SmartAccount
         let is_g: bool = env.invoke_contract(
             &smart_account,
             &Symbol::new(&env, "is_guardian"),
@@ -66,12 +70,11 @@ impl RecoveryModuleContract {
             new_public_key,
             approvals,
             created_at_ledger: env.ledger().sequence(),
+            timelock_expires_at: 0,
             status: ProposalStatus::Pending,
         };
 
-        env.storage()
-            .persistent()
-            .set(&RecoveryDataKey::Proposal(proposal_id), &proposal);
+        set_proposal(&env, proposal_id, &proposal);
 
         env.events().publish(
             (Symbol::new(&env, "recovery_proposed"),),
@@ -91,7 +94,6 @@ impl RecoveryModuleContract {
 
         let smart_account = Self::get_smart_account(env.clone())?;
 
-        // Verify guardian registration
         let is_g: bool = env.invoke_contract(
             &smart_account,
             &Symbol::new(&env, "is_guardian"),
@@ -103,10 +105,9 @@ impl RecoveryModuleContract {
 
         let mut proposal = Self::get_proposal(env.clone(), proposal_id)?;
         if proposal.status != ProposalStatus::Pending {
-            return Err(WalletError::Unauthorized);
+            return Err(WalletError::ProposalAlreadyExecuted);
         }
 
-        // Add approval if not already approved by this guardian
         let mut already_approved = false;
         for app in proposal.approvals.iter() {
             if app == guardian {
@@ -118,38 +119,24 @@ impl RecoveryModuleContract {
             proposal.approvals.push_back(guardian);
         }
 
-        // Fetch SmartAccount threshold configuration
         let config: WalletConfig = env.invoke_contract(
             &smart_account,
             &Symbol::new(&env, "get_config"),
             ().into_val(&env),
         );
 
-        // Check if recovery threshold is met
         if proposal.approvals.len() >= config.recovery_threshold {
             proposal.status = ProposalStatus::TimelockStarted;
-
-            let expires_at = env.ledger().sequence() + config.recovery_timelock_ledgers;
-            env.storage()
-                .temporary()
-                .set(&RecoveryDataKey::Timelock(proposal_id), &expires_at);
-
-            // Extend temporary storage TTL to safely cover the timelock window
-            env.storage().temporary().extend_ttl(
-                &RecoveryDataKey::Timelock(proposal_id),
-                config.recovery_timelock_ledgers + 100,
-                config.recovery_timelock_ledgers + 1000,
-            );
+            proposal.timelock_expires_at =
+                env.ledger().sequence() + config.recovery_timelock_ledgers;
 
             env.events().publish(
                 (Symbol::new(&env, "recovery_locked"),),
-                (proposal_id, expires_at),
+                (proposal_id, proposal.timelock_expires_at),
             );
         }
 
-        env.storage()
-            .persistent()
-            .set(&RecoveryDataKey::Proposal(proposal_id), &proposal);
+        set_proposal(&env, proposal_id, &proposal);
 
         Ok(proposal.status)
     }
@@ -161,21 +148,12 @@ impl RecoveryModuleContract {
         let mut proposal = Self::get_proposal(env.clone(), proposal_id)?;
 
         if proposal.status != ProposalStatus::TimelockStarted {
-            return Err(WalletError::Unauthorized);
+            return Err(WalletError::RecoveryNotReady);
+        }
+        if env.ledger().sequence() < proposal.timelock_expires_at {
+            return Err(WalletError::TimelockActive);
         }
 
-        // Load and check the timelock expiration sequence
-        let expires_at: u32 = env
-            .storage()
-            .temporary()
-            .get(&RecoveryDataKey::Timelock(proposal_id))
-            .ok_or(WalletError::Unauthorized)?;
-
-        if env.ledger().sequence() < expires_at {
-            return Err(WalletError::Unauthorized); // Timelock is still active
-        }
-
-        // Execute cross-contract rotation on the smart account
         env.invoke_contract::<()>(
             &smart_account,
             &Symbol::new(&env, "rotate_credentials"),
@@ -187,9 +165,7 @@ impl RecoveryModuleContract {
         );
 
         proposal.status = ProposalStatus::Executed;
-        env.storage()
-            .persistent()
-            .set(&RecoveryDataKey::Proposal(proposal_id), &proposal);
+        set_proposal(&env, proposal_id, &proposal);
 
         env.events().publish(
             (Symbol::new(&env, "recovery_executed"),),
@@ -206,19 +182,17 @@ impl RecoveryModuleContract {
         if owner != smart_account {
             return Err(WalletError::Unauthorized);
         }
-
-        // Verifies original owner authentication
         owner.require_auth();
 
         let mut proposal = Self::get_proposal(env.clone(), proposal_id)?;
-        if proposal.status != ProposalStatus::Pending && proposal.status != ProposalStatus::TimelockStarted {
-            return Err(WalletError::Unauthorized);
+        if proposal.status != ProposalStatus::Pending
+            && proposal.status != ProposalStatus::TimelockStarted
+        {
+            return Err(WalletError::ProposalAlreadyExecuted);
         }
 
         proposal.status = ProposalStatus::Cancelled;
-        env.storage()
-            .persistent()
-            .set(&RecoveryDataKey::Proposal(proposal_id), &proposal);
+        set_proposal(&env, proposal_id, &proposal);
 
         env.events().publish(
             (Symbol::new(&env, "recovery_cancelled"),),
@@ -233,9 +207,25 @@ impl RecoveryModuleContract {
         env.storage()
             .persistent()
             .get(&RecoveryDataKey::Proposal(proposal_id))
-            .ok_or(WalletError::SignerNotFound) // Map to general error
+            .ok_or(WalletError::ProposalNotFound)
     }
 }
+
+fn set_proposal(env: &Env, proposal_id: u32, proposal: &RecoveryProposal) {
+    let key = RecoveryDataKey::Proposal(proposal_id);
+    env.storage().persistent().set(&key, proposal);
+    // Recovery proposals must outlive long dormancy periods just like
+    // guardians do — bump generously on every write.
+    env.storage()
+        .persistent()
+        .extend_ttl(&key, 120_960, 518_400);
+    // Piggyback refresh for this module's own Instance entry, same as the
+    // wallet does for itself on every successful auth.
+    env.storage().instance().extend_ttl(120_960, 518_400);
+}
+
+#[cfg(test)]
+mod test;
 
 /// Helper to get and increment proposal counter
 fn get_next_proposal_id(env: &Env) -> u32 {
