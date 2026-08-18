@@ -2,6 +2,8 @@
 
 > Non-custodial Stellar wallets secured by real device passkeys (secp256r1/WebAuthn) instead of seed phrases, with on-chain social recovery, spending policies, and sponsored (gasless) execution — all enforced by Soroban smart contracts, not client-side trust.
 
+**Live demo:** [kivo-on-stellar.vercel.app](https://kivo-on-stellar.vercel.app/) · **Network:** Stellar Testnet
+
 This repository was built for the **Stellar Journey to Mastery** program and has been through a full internal security audit and remediation pass (see [`SECURITY.md`](./SECURITY.md)). The checklists below map every program requirement directly to the code, test, or transaction that satisfies it.
 
 > ### Reviewer note: both Level 2 and Level 3 came back "Revisions Needed" against a stale snapshot
@@ -44,7 +46,7 @@ This repository was built for the **Stellar Journey to Mastery** program and has
 **Level 2**
 - [x] Public GitHub repository — `github.com/Fatihmaull/kivo-on-stellar`
 - [x] README with setup instructions — [Local Development Setup](#local-development-setup)
-- [ ] Live demo link (Vercel etc.) — *optional for Level 2; not deployed, see [Optional: deploying the frontend](#optional-deploying-the-frontend)*
+- [x] Live demo link (Vercel etc.) — **[kivo-on-stellar.vercel.app](https://kivo-on-stellar.vercel.app/)** — optional for Level 2, included anyway
 - [ ] Screenshot: wallet options available — *driven live in a real browser and visually confirmed working, but couldn't be saved as an image file — see [Screenshots](#screenshots)*
 - [x] Deployed contract address — [Deployed Contracts](#deployed-contracts-testnet)
 - [x] Transaction hash of a contract call, verifiable on Stellar Explorer — [Verifiable transactions](#verifiable-transactions)
@@ -54,7 +56,7 @@ This repository was built for the **Stellar Journey to Mastery** program and has
 - [x] Public GitHub repository
 - [x] README with complete documentation
 - [x] Minimum 10+ meaningful commits — 35
-- [ ] Live demo link — *not deployed; publishing to a public URL is an outward-facing action outside this repo's scope, see [Optional: deploying the frontend](#optional-deploying-the-frontend)*
+- [x] Live demo link — **[kivo-on-stellar.vercel.app](https://kivo-on-stellar.vercel.app/)**
 - [x] Contract deployment address
 - [x] Transaction hash for contract interaction
 - [ ] Screenshot: mobile responsive UI — *confirmed zero horizontal overflow at 375px via direct measurement — see [Screenshots](#screenshots)*
@@ -142,7 +144,7 @@ Full mechanism-level detail — including the exact WebAuthn signing pipeline, s
 - **Frontend:** Next.js 16 (App Router), TypeScript, Tailwind CSS v4
 - **Chain access:** `@stellar/stellar-sdk` (RPC, transaction building, `authorizeEntry` custom-account signing), `@creit.tech/stellar-wallets-kit`
 - **Testing:** `cargo test` with real `p256`/`ed25519-dalek` signing (dev-only), GitHub Actions CI
-- **Deployment:** Stellar CLI → testnet; Vercel-ready frontend (not deployed as part of this submission — see [Optional: deploying the frontend](#optional-deploying-the-frontend))
+- **Deployment:** Stellar CLI → testnet; frontend live on Vercel at [kivo-on-stellar.vercel.app](https://kivo-on-stellar.vercel.app/)
 
 ---
 
@@ -268,9 +270,9 @@ The contracts and frontend are written to the same standard for mainnet, but **m
 - [ ] Rehearse the full recovery flow (propose → approve → timelock → execute) against a funded mainnet wallet before relying on it
 - [ ] Swap `NEXT_PUBLIC_STELLAR_NETWORK=PUBLIC` and point RPC/Horizon URLs at mainnet endpoints
 
-### Optional: deploying the frontend
+### Deploying your own frontend
 
-Not deployed to a public URL as part of this submission (publishing is an outward-facing action outside this repo's scope). To deploy: `vercel --prod` from `web/` after setting the `NEXT_PUBLIC_*` env vars — including `NEXT_PUBLIC_RP_ID` set to the real production domain, since WebAuthn binds passkeys to it permanently.
+The reference deployment is live at [kivo-on-stellar.vercel.app](https://kivo-on-stellar.vercel.app/) — its `NEXT_PUBLIC_RP_ID` is pinned to that domain, since WebAuthn binds passkeys to the origin permanently. To deploy your own: `vercel --prod` from `web/` after setting the `NEXT_PUBLIC_*` env vars, with `NEXT_PUBLIC_RP_ID` set to whatever domain you're actually serving from.
 
 ---
 
