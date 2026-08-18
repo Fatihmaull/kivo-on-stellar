@@ -1,10 +1,10 @@
-# 💎 Kivo — Smart Account Wallet on Stellar Soroban
+# Kivo — Smart Account Wallet on Stellar Soroban
 
 > Non-custodial Stellar wallets secured by real device passkeys (secp256r1/WebAuthn) instead of seed phrases, with on-chain social recovery, spending policies, and sponsored (gasless) execution — all enforced by Soroban smart contracts, not client-side trust.
 
 This repository was built for the **Stellar Journey to Mastery** program and has been through a full internal security audit and remediation pass (see [`SECURITY.md`](./SECURITY.md)). The checklists below map every program requirement directly to the code, test, or transaction that satisfies it.
 
-> ### 🧾 Reviewer note: both Level 2 and Level 3 came back "Revisions Needed" against a stale snapshot
+> ### Reviewer note: both Level 2 and Level 3 came back "Revisions Needed" against a stale snapshot
 >
 > Both automated reviews were generated within 5 seconds of each other and flag issues — a placeholder `XYZ` contract address, no wallet-connect code found, no `@stellar/stellar-sdk` integration files found — that describe the repository **before** the security-audit-and-rebuild pass documented in `SECURITY.md`, not the current commit. Every flagged item is independently verifiable as resolved right now: real deployed addresses on Stellar Expert, real `web/src/lib/` integration files, a real "Connect Wallet" button driven live during development.
 >
@@ -12,43 +12,43 @@ This repository was built for the **Stellar Journey to Mastery** program and has
 
 ---
 
-## 📌 Level 2 Requirements
+## Level 2 Requirements
 
 | Requirement | Status | Evidence |
 |---|---|---|
-| StellarWalletsKit implementation | ✅ | [`web/src/lib/wallet.ts`](./web/src/lib/wallet.ts) — real `authModal()` connect flow (Freighter / xBull / Albedo) |
-| 3+ error types handled | ✅ | Wallet not found, connection rejected, biometric cancelled/timeout, insufficient testnet balance, on-chain policy/auth errors decoded to readable names — see [Error handling](#️-error-handling) |
-| Contract deployed on testnet | ✅ | 4 contracts live — see [Deployed contracts](#-deployed-contracts-testnet) |
-| Contract called from the frontend | ✅ | Real Soroban RPC `simulateTransaction`/`sendTransaction` calls in [`web/src/lib/kivo.ts`](./web/src/lib/kivo.ts), not mocked |
-| Reading and writing data to a contract | ✅ | Reads: `get_config`, `get_nonce`, `is_guardian`, balances. Writes: deploy, `add_guardian`, `transfer` (passkey- and classic-wallet-signed) |
-| Event listening & state synchronization | ✅ | `getEvents` polling hook ([`useWalletEvents`](./web/src/app/page.tsx)) drives the live Activity tab and reconstructs the guardian list — there is no "list guardians" contract method by design (Soroban storage maps aren't enumerable), so this is genuinely load-bearing, not decorative |
-| Transaction status tracking (pending/success/fail) | ✅ | [`waitForTransaction`](./web/src/lib/soroban.ts) polls `getTransaction`; every submit flow renders a live status panel with an explorer link |
-| Minimum 10+ meaningful commits | ✅ | 35 commits — 29 building the original contracts/frontend, 6 for this audit-and-fix pass — see `git log` |
+| StellarWalletsKit implementation | Done | [`web/src/lib/wallet.ts`](./web/src/lib/wallet.ts) — real `authModal()` connect flow (Freighter / xBull / Albedo) |
+| 3+ error types handled | Done | Wallet not found, connection rejected, biometric cancelled/timeout, insufficient testnet balance, on-chain policy/auth errors decoded to readable names — see [Error handling](#error-handling) |
+| Contract deployed on testnet | Done | 4 contracts live — see [Deployed contracts](#deployed-contracts-testnet) |
+| Contract called from the frontend | Done | Real Soroban RPC `simulateTransaction`/`sendTransaction` calls in [`web/src/lib/kivo.ts`](./web/src/lib/kivo.ts), not mocked |
+| Reading and writing data to a contract | Done | Reads: `get_config`, `get_nonce`, `is_guardian`, balances. Writes: deploy, `add_guardian`, `transfer` (passkey- and classic-wallet-signed) |
+| Event listening & state synchronization | Done | `getEvents` polling hook ([`useWalletEvents`](./web/src/app/page.tsx)) drives the live Activity tab and reconstructs the guardian list — there is no "list guardians" contract method by design (Soroban storage maps aren't enumerable), so this is genuinely load-bearing, not decorative |
+| Transaction status tracking (pending/success/fail) | Done | [`waitForTransaction`](./web/src/lib/soroban.ts) polls `getTransaction`; every submit flow renders a live status panel with an explorer link |
+| Minimum 10+ meaningful commits | Done | 35 commits — 29 building the original contracts/frontend, 6 for this audit-and-fix pass — see `git log` |
 
-## 📌 Level 3 Requirements
+## Level 3 Requirements
 
 | Requirement | Status | Evidence |
 |---|---|---|
-| Inter-contract communication | ✅ | `SmartAccount.execute_sponsored` → `Paymaster.is_accepted_token`; `SmartAccount.enforce_policies` → `PolicyEngine.check_policy`; `RecoveryModule` ↔ `SmartAccount` (`is_guardian`, `get_config`, `rotate_credentials`) — all exercised in [`integration_test.rs`](./contracts/smart-account/src/integration_test.rs) and [`recovery-module/src/test.rs`](./contracts/recovery-module/src/test.rs) against real deployed contract instances, not stubs |
-| Event streaming & real-time updates | ✅ | Same `getEvents` polling as Level 2, on a 6s interval matching ledger close time |
-| CI/CD pipeline setup | ✅ | [`.github/workflows/ci.yml`](./.github/workflows/ci.yml) — contract tests, clippy, a real WASM build for all 4 contracts, frontend lint + typecheck + build, on every push/PR |
-| Smart contract deployment workflow | ✅ | Reproducible CLI commands in [Deployment](#-deployment) — this is exactly how the live testnet addresses below were produced |
-| Mobile responsive frontend | ✅ | Tailwind responsive layout, verified at 375px viewport with zero horizontal overflow |
-| Error handling & loading states | ✅ | Every submit flow has explicit `building → simulating → signing → submitting → pending → success/failed` states, not a single boolean spinner |
-| Writing tests for contracts and frontend | ✅ | **46 passing Rust tests** across all 4 contracts (`cargo test --workspace`), including real P-256/ed25519 cryptographic signing — see [Testing](#-testing) |
-| Production-ready architecture practices | ✅ | See [`SECURITY.md`](./SECURITY.md) for the full audit: a critical auth bypass found and fixed, replay/storage/recovery hardening, and the reasoning behind each |
-| Documentation & demo presentation | ✅ | This README + `SECURITY.md`; demo video excluded per submission scope |
+| Inter-contract communication | Done | `SmartAccount.execute_sponsored` → `Paymaster.is_accepted_token`; `SmartAccount.enforce_policies` → `PolicyEngine.check_policy`; `RecoveryModule` ↔ `SmartAccount` (`is_guardian`, `get_config`, `rotate_credentials`) — all exercised in [`integration_test.rs`](./contracts/smart-account/src/integration_test.rs) and [`recovery-module/src/test.rs`](./contracts/recovery-module/src/test.rs) against real deployed contract instances, not stubs |
+| Event streaming & real-time updates | Done | Same `getEvents` polling as Level 2, on a 6s interval matching ledger close time |
+| CI/CD pipeline setup | Done | [`.github/workflows/ci.yml`](./.github/workflows/ci.yml) — contract tests, clippy, a real WASM build for all 4 contracts, frontend lint + typecheck + build, on every push/PR |
+| Smart contract deployment workflow | Done | Reproducible CLI commands in [Deployment](#deployment) — this is exactly how the live testnet addresses below were produced |
+| Mobile responsive frontend | Done | Tailwind responsive layout, verified at 375px viewport with zero horizontal overflow |
+| Error handling & loading states | Done | Every submit flow has explicit `building → simulating → signing → submitting → pending → success/failed` states, not a single boolean spinner |
+| Writing tests for contracts and frontend | Done | **46 passing Rust tests** across all 4 contracts (`cargo test --workspace`), including real P-256/ed25519 cryptographic signing — see [Testing](#testing) |
+| Production-ready architecture practices | Done | See [`SECURITY.md`](./SECURITY.md) for the full audit: a critical auth bypass found and fixed, replay/storage/recovery hardening, and the reasoning behind each |
+| Documentation & demo presentation | Done | This README + `SECURITY.md`; demo video excluded per submission scope |
 
 ### Submission checklist (program wording)
 
 **Level 2**
 - [x] Public GitHub repository — `github.com/Fatihmaull/kivo-on-stellar`
-- [x] README with setup instructions — [Local Development Setup](#️-local-development-setup)
+- [x] README with setup instructions — [Local Development Setup](#local-development-setup)
 - [ ] Live demo link (Vercel etc.) — *optional for Level 2; not deployed, see [Optional: deploying the frontend](#optional-deploying-the-frontend)*
-- [ ] Screenshot: wallet options available — *driven live in a real browser and visually confirmed working, but couldn't be saved as an image file — see [Screenshots](#-screenshots)*
-- [x] Deployed contract address — [Deployed Contracts](#-deployed-contracts-testnet)
+- [ ] Screenshot: wallet options available — *driven live in a real browser and visually confirmed working, but couldn't be saved as an image file — see [Screenshots](#screenshots)*
+- [x] Deployed contract address — [Deployed Contracts](#deployed-contracts-testnet)
 - [x] Transaction hash of a contract call, verifiable on Stellar Explorer — [Verifiable transactions](#verifiable-transactions)
-- [x] Minimum 2+ meaningful commits — 35, see [above](#-level-2-requirements)
+- [x] Minimum 2+ meaningful commits — 35, see [above](#level-2-requirements)
 
 **Level 3**
 - [x] Public GitHub repository
@@ -57,16 +57,16 @@ This repository was built for the **Stellar Journey to Mastery** program and has
 - [ ] Live demo link — *not deployed; publishing to a public URL is an outward-facing action outside this repo's scope, see [Optional: deploying the frontend](#optional-deploying-the-frontend)*
 - [x] Contract deployment address
 - [x] Transaction hash for contract interaction
-- [ ] Screenshot: mobile responsive UI — *confirmed zero horizontal overflow at 375px via direct measurement — see [Screenshots](#-screenshots)*
-- [x] CI/CD pipeline running — *linked directly to the live, green GitHub Actions run rather than a screenshot of it, see [CI/CD](#-cicd)*
-- [ ] Screenshot: test output with 3+ passing tests — *46 tests actually pass, verbatim real output in [Testing](#-testing), just not as a picture*
+- [ ] Screenshot: mobile responsive UI — *confirmed zero horizontal overflow at 375px via direct measurement — see [Screenshots](#screenshots)*
+- [x] CI/CD pipeline running — *linked directly to the live, green GitHub Actions run rather than a screenshot of it, see [CI/CD](#cicd)*
+- [ ] Screenshot: test output with 3+ passing tests — *46 tests actually pass, verbatim real output in [Testing](#testing), just not as a picture*
 - [x] Demo video link — *excluded from this submission by explicit instruction*
 
-The remaining unchecked boxes are all the same root cause, and it's narrower than it first looked: the wallet-selection modal and mobile layout were both driven live and visually verified in a real, connected browser during this work — not simulated, not assumed. What's actually missing is a way to persist those pixels as image files from this particular environment; every screenshot tool available here writes to storage this repo's working directory can't read back from. See [Screenshots](#-screenshots) for exactly what was verified and the one-minute path to grab the image files yourself.
+The remaining unchecked boxes are all the same root cause, and it's narrower than it first looked: the wallet-selection modal and mobile layout were both driven live and visually verified in a real, connected browser during this work — not simulated, not assumed. What's actually missing is a way to persist those pixels as image files from this particular environment; every screenshot tool available here writes to storage this repo's working directory can't read back from. See [Screenshots](#screenshots) for exactly what was verified and the one-minute path to grab the image files yourself.
 
 ---
 
-## ⚠️ Read this before judging the UI
+## Read this before judging the UI
 
 Two things are true at once, on purpose:
 
@@ -77,7 +77,7 @@ Reporting this distinction plainly seemed more useful than a screenshot that can
 
 ---
 
-## 🔗 Deployed Contracts (Testnet)
+## Deployed Contracts (Testnet)
 
 All four contracts were deployed fresh from this repository's audited code — not the original, vulnerable version. Every address below is independently verifiable on Stellar Expert.
 
@@ -100,17 +100,17 @@ The `SmartAccount` instance above was deployed with a deterministic **demo** P-2
 
 ---
 
-## 🚀 Key Features
+## Key Features
 
-- **🔑 Passkey authentication** — secp256r1/WebAuthn signature verification runs entirely on-chain in `__check_auth`; the challenge binding, RP-ID pin, and User Presence/Verification flags are all enforced by the contract, not trusted from the client (see [`SECURITY.md`](./SECURITY.md) for why this matters).
-- **🛡️ Social recovery** — configurable *m*-of-*n* guardian quorum with a timelock, implemented as a genuine cross-contract flow between `SmartAccount` and `RecoveryModule`.
-- **⏱️ Spending policy** — a built-in daily limit plus an optional `PolicyEngine` contract for whitelisting and per-token overrides, composed via real inter-contract calls.
-- **⛽ Sponsored execution** — `execute_sponsored` runs the user's action and the relayer's fee payment as one atomic call under one signature, bounded by a user-signed `max_fee` the contract itself enforces.
-- **⚡ Multi-wallet** — Freighter / xBull / Albedo via StellarWalletsKit for the classic account that pays deployment/network fees; the smart account itself only ever needs a passkey.
+- **Passkey authentication** — secp256r1/WebAuthn signature verification runs entirely on-chain in `__check_auth`; the challenge binding, RP-ID pin, and User Presence/Verification flags are all enforced by the contract, not trusted from the client (see [`SECURITY.md`](./SECURITY.md) for why this matters).
+- **Social recovery** — configurable *m*-of-*n* guardian quorum with a timelock, implemented as a genuine cross-contract flow between `SmartAccount` and `RecoveryModule`.
+- **Spending policy** — a built-in daily limit plus an optional `PolicyEngine` contract for whitelisting and per-token overrides, composed via real inter-contract calls.
+- **Sponsored execution** — `execute_sponsored` runs the user's action and the relayer's fee payment as one atomic call under one signature, bounded by a user-signed `max_fee` the contract itself enforces.
+- **Multi-wallet** — Freighter / xBull / Albedo via StellarWalletsKit for the classic account that pays deployment/network fees; the smart account itself only ever needs a passkey.
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
                     ┌─────────────────────────┐
@@ -136,7 +136,7 @@ Full mechanism-level detail — including the exact WebAuthn signing pipeline, s
 
 ---
 
-## 💻 Tech Stack
+## Tech Stack
 
 - **Contracts:** Rust, Soroban SDK 22, workspace of 4 contracts + a shared `novus-types` crate
 - **Frontend:** Next.js 16 (App Router), TypeScript, Tailwind CSS v4
@@ -146,7 +146,7 @@ Full mechanism-level detail — including the exact WebAuthn signing pipeline, s
 
 ---
 
-## ⚙️ Local Development Setup
+## Local Development Setup
 
 ### Prerequisites
 - Rust (stable) + `rustup target add wasm32v1-none`
@@ -174,7 +174,7 @@ cargo clippy --workspace -- -D warnings
 cd web
 cp .env.example .env.local
 ```
-Fill in your own deployed contract addresses (see [Deployment](#-deployment) below), or reuse the testnet addresses already in this README to point at the live demo contracts.
+Fill in your own deployed contract addresses (see [Deployment](#deployment) below), or reuse the testnet addresses already in this README to point at the live demo contracts.
 
 ### 4. Run the frontend
 ```bash
@@ -184,7 +184,7 @@ Open [http://localhost:3000](http://localhost:3000). `NEXT_PUBLIC_RP_ID` must ma
 
 ---
 
-## 🧪 Testing
+## Testing
 
 ```bash
 $ cargo test --workspace
@@ -203,7 +203,7 @@ The K-01 regression suite specifically — `test_assertion_rejected_for_a_differ
 
 ---
 
-## 🛡️ Error Handling
+## Error Handling
 
 Handled explicitly, each with its own user-facing message (not a generic "something went wrong"):
 
@@ -215,7 +215,7 @@ Handled explicitly, each with its own user-facing message (not a generic "someth
 
 ---
 
-## 🔄 CI/CD
+## CI/CD
 
 [`.github/workflows/ci.yml`](./.github/workflows/ci.yml) runs on every push/PR:
 - `cargo check` / `cargo test --workspace` (46 tests) / `cargo clippy -- -D warnings`
@@ -226,7 +226,7 @@ Handled explicitly, each with its own user-facing message (not a generic "someth
 
 ---
 
-## 📦 Deployment
+## Deployment
 
 Commands used to produce the live addresses above — reproducible for anyone with a funded testnet identity:
 
@@ -274,14 +274,14 @@ Not deployed to a public URL as part of this submission (publishing is an outwar
 
 ---
 
-## 📸 Screenshots
+## Screenshots
 
 No image files embedded in this revision — not for lack of trying. What actually happened:
 
 - **Wallet-selection modal**: driven live in a real, connected Chrome instance — `npm run dev`, clicked "Connect Wallet," and the real StellarWalletsKit modal rendered showing Freighter, xBull, and Albedo. Genuinely observed, genuinely working.
-- **CI pipeline green**: confirmed live via `gh run view` and by opening the actual GitHub Actions run in that same browser — see the direct link in [CI/CD](#-cicd) above.
+- **CI pipeline green**: confirmed live via `gh run view` and by opening the actual GitHub Actions run in that same browser — see the direct link in [CI/CD](#cicd) above.
 - **Mobile responsive (375px)**: confirmed via a direct DOM measurement (`document.documentElement.scrollWidth === window.innerWidth` at a 375px viewport) — zero horizontal overflow.
-- **46 passing tests**: the verbatim `cargo test --workspace` output is already in [Testing](#-testing) as real text, not a picture of text.
+- **46 passing tests**: the verbatim `cargo test --workspace` output is already in [Testing](#testing) as real text, not a picture of text.
 
 What didn't work: every screenshot tool available in the environment this was built in (`save_to_disk` on two independent screenshot tools, across two independent browser/desktop contexts) writes to storage this environment can't read back from to commit into the repo. Confirmed by exhausting the reasonable search paths, not by a single failed attempt. The captures above are real and were visually reviewed in the conversation that produced this repo — they just aren't files here.
 
@@ -289,6 +289,6 @@ If you need literal image files for the submission form: `cd web && npm run dev`
 
 ---
 
-## 📜 License
+## License
 
 MIT License. Built for the Stellar Journey to Mastery program.
