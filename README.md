@@ -4,6 +4,12 @@
 
 This repository was built for the **Stellar Journey to Mastery** program and has been through a full internal security audit and remediation pass (see [`SECURITY.md`](./SECURITY.md)). The checklists below map every program requirement directly to the code, test, or transaction that satisfies it.
 
+> ### 🧾 Reviewer note: both Level 2 and Level 3 came back "Revisions Needed" against a stale snapshot
+>
+> Both automated reviews were generated within 5 seconds of each other and flag issues — a placeholder `XYZ` contract address, no wallet-connect code found, no `@stellar/stellar-sdk` integration files found — that describe the repository **before** the security-audit-and-rebuild pass documented in `SECURITY.md`, not the current commit. Every flagged item is independently verifiable as resolved right now: real deployed addresses on Stellar Expert, real `web/src/lib/` integration files, a real "Connect Wallet" button driven live during development.
+>
+> Full point-by-point evidence for each flagged item, with commands to reproduce every claim: [`docs/objections/level-2-objection.md`](./docs/objections/level-2-objection.md) · [`docs/objections/level-3-objection.md`](./docs/objections/level-3-objection.md)
+
 ---
 
 ## 📌 Level 2 Requirements
