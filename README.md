@@ -47,7 +47,7 @@ This repository was built for the **Stellar Journey to Mastery** program and has
 - [x] Public GitHub repository — `github.com/Fatihmaull/kivo-on-stellar`
 - [x] README with setup instructions — [Local Development Setup](#local-development-setup)
 - [x] Live demo link (Vercel etc.) — **[kivo-on-stellar.vercel.app](https://kivo-on-stellar.vercel.app/)** — optional for Level 2, included anyway
-- [ ] Screenshot: wallet options available — *driven live in a real browser and visually confirmed working, but couldn't be saved as an image file — see [Screenshots](#screenshots)*
+- [x] Screenshot: wallet options available — see [Screenshots](#screenshots)
 - [x] Deployed contract address — [Deployed Contracts](#deployed-contracts-testnet)
 - [x] Transaction hash of a contract call, verifiable on Stellar Explorer — [Verifiable transactions](#verifiable-transactions)
 - [x] Minimum 2+ meaningful commits — 35, see [above](#level-2-requirements)
@@ -59,12 +59,12 @@ This repository was built for the **Stellar Journey to Mastery** program and has
 - [x] Live demo link — **[kivo-on-stellar.vercel.app](https://kivo-on-stellar.vercel.app/)**
 - [x] Contract deployment address
 - [x] Transaction hash for contract interaction
-- [ ] Screenshot: mobile responsive UI — *confirmed zero horizontal overflow at 375px via direct measurement — see [Screenshots](#screenshots)*
+- [x] Screenshot: mobile responsive UI — see [Screenshots](#screenshots)
 - [x] CI/CD pipeline running — *linked directly to the live, green GitHub Actions run rather than a screenshot of it, see [CI/CD](#cicd)*
-- [ ] Screenshot: test output with 3+ passing tests — *46 tests actually pass, verbatim real output in [Testing](#testing), just not as a picture*
+- [x] Screenshot: test output with 3+ passing tests — see [Screenshots](#screenshots) (46 tests pass, verbatim real output also in [Testing](#testing))
 - [x] Demo video link — *excluded from this submission by explicit instruction*
 
-The remaining unchecked boxes are all the same root cause, and it's narrower than it first looked: the wallet-selection modal and mobile layout were both driven live and visually verified in a real, connected browser during this work — not simulated, not assumed. What's actually missing is a way to persist those pixels as image files from this particular environment; every screenshot tool available here writes to storage this repo's working directory can't read back from. See [Screenshots](#screenshots) for exactly what was verified and the one-minute path to grab the image files yourself.
+Every item above is checked — screenshots are real, embedded files under [`docs/`](./docs), not descriptions of what was verified live. See [Screenshots](#screenshots) for all six.
 
 ---
 
@@ -278,16 +278,21 @@ The reference deployment is live at [kivo-on-stellar.vercel.app](https://kivo-on
 
 ## Screenshots
 
-No image files embedded in this revision — not for lack of trying. What actually happened:
+### Mobile view
+![Mobile view](./docs/mobile-view.png)
 
-- **Wallet-selection modal**: driven live in a real, connected Chrome instance — `npm run dev`, clicked "Connect Wallet," and the real StellarWalletsKit modal rendered showing Freighter, xBull, and Albedo. Genuinely observed, genuinely working.
-- **CI pipeline green**: confirmed live via `gh run view` and by opening the actual GitHub Actions run in that same browser — see the direct link in [CI/CD](#cicd) above.
-- **Mobile responsive (375px)**: confirmed via a direct DOM measurement (`document.documentElement.scrollWidth === window.innerWidth` at a 375px viewport) — zero horizontal overflow.
-- **46 passing tests**: the verbatim `cargo test --workspace` output is already in [Testing](#testing) as real text, not a picture of text.
+### Desktop view
+![Desktop view](./docs/desktop-view.png)
 
-What didn't work: every screenshot tool available in the environment this was built in (`save_to_disk` on two independent screenshot tools, across two independent browser/desktop contexts) writes to storage this environment can't read back from to commit into the repo. Confirmed by exhausting the reasonable search paths, not by a single failed attempt. The captures above are real and were visually reviewed in the conversation that produced this repo — they just aren't files here.
+### Wallet connection
+![Wallet connection — selection modal](./docs/wallet-connect-1.png)
+![Wallet connection — Freighter](./docs/wallet-connect-2.png)
 
-If you need literal image files for the submission form: `cd web && npm run dev`, open `localhost:3000`, click **Connect Wallet** for the modal, and your OS's own screenshot tool (Win+Shift+S) takes it from there in under a minute — no guesswork needed, the exact flow above is already proven to work.
+### Unit tests (`cargo test --workspace`)
+![Cargo test output 1](./docs/cargo-test-1.png)
+![Cargo test output 2](./docs/cargo-test-2.png)
+
+Live demo: [kivo-on-stellar.vercel.app](https://kivo-on-stellar.vercel.app/) — the app itself is one click away, not just these captures of it.
 
 ---
 
